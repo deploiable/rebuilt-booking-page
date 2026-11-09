@@ -1,0 +1,818 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Book an intro call</title>
+<meta name="description" content="Pick a time for a 30-minute intro call.">
+<style>
+  :root {
+    --bg: #f4f3ef;
+    --surface: #ffffff;
+    --ink: #1c1e21;
+    --muted: #5a6068;
+    --line: #e2e0da;
+    --accent: #0d6b5b;
+    --accent-hover: #0a5a4c;
+    --accent-ink: #ffffff;
+    --accent-soft: #e2f0ec;
+    --accent-soft-ink: #0a5346;
+    --danger: #b3261e;
+    --danger-soft: #fdecea;
+    --focus: #2457d6;
+    --radius: 14px;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #121416;
+      --surface: #1b1e21;
+      --ink: #eceef0;
+      --muted: #a3a9b1;
+      --line: #2e3237;
+      --accent: #4fc2a9;
+      --accent-hover: #6fd3bd;
+      --accent-ink: #0d1f1b;
+      --accent-soft: #1d3530;
+      --accent-soft-ink: #9fe3d3;
+      --danger: #ff8a80;
+      --danger-soft: #3a1f1d;
+      --focus: #8ab4ff;
+      color-scheme: dark;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  .wrap { max-width: 1020px; margin: 0 auto; padding: 32px 16px 48px; }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    display: grid;
+    grid-template-columns: 1fr;
+    overflow: hidden;
+  }
+  @media (min-width: 880px) { .card { grid-template-columns: 290px minmax(0, 1fr); } }
+
+  /* Left: meeting info */
+  .info { padding: 24px; border-bottom: 1px solid var(--line); }
+  @media (min-width: 880px) { .info { border-bottom: 0; border-right: 1px solid var(--line); padding: 32px 28px; } }
+  .company { margin: 0 0 4px; color: var(--muted); font-size: .9rem; font-weight: 600; letter-spacing: .02em; }
+  h1 { margin: 0 0 16px; font-size: 1.6rem; line-height: 1.2; }
+  .facts { list-style: none; margin: 0 0 16px; padding: 0; display: grid; gap: 8px; color: var(--muted); }
+  .facts li { display: flex; gap: 10px; align-items: flex-start; }
+  .facts svg { flex: none; width: 20px; height: 20px; margin-top: 2px; }
+  .desc { margin: 0; color: var(--ink); }
+  .hosthours { margin: 16px 0 0; font-size: .85rem; color: var(--muted); }
+
+  /* Right: flow */
+  .flow { padding: 24px; min-width: 0; }
+  @media (min-width: 880px) { .flow { padding: 32px; } }
+  h2 { margin: 0 0 16px; font-size: 1.2rem; }
+  h2:focus { outline: none; }
+  .tzrow { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; margin-bottom: 20px; }
+  .tzrow label { font-size: .9rem; color: var(--muted); }
+  select, input, textarea {
+    font: inherit; color: var(--ink); background: var(--surface);
+    border: 1px solid var(--line); border-radius: 10px;
+    padding: 10px 12px; min-height: 44px; width: 100%;
+  }
+  .tzrow select { width: auto; max-width: 100%; min-width: 0; flex: 1 1 240px; }
+  .tznow { font-size: .85rem; color: var(--muted); }
+
+  .pick { display: grid; gap: 24px; grid-template-columns: minmax(0, 1fr); }
+  @media (min-width: 640px) { .pick { grid-template-columns: minmax(0, 1fr) 190px; } }
+
+  /* Calendar */
+  .calhead { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .calhead h3 { margin: 0; font-size: 1rem; }
+  .iconbtn {
+    width: 44px; height: 44px; border-radius: 50%;
+    border: 1px solid transparent; background: transparent; color: var(--ink);
+    display: inline-grid; place-items: center; cursor: pointer;
+  }
+  .iconbtn:hover:not(:disabled) { background: var(--accent-soft); color: var(--accent-soft-ink); }
+  .iconbtn:disabled { color: var(--line); cursor: default; }
+  .iconbtn svg { width: 20px; height: 20px; }
+  table.cal { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  .cal th { font-size: .75rem; font-weight: 600; color: var(--muted); padding: 4px 0 8px; text-transform: uppercase; letter-spacing: .04em; }
+  .cal th abbr { text-decoration: none; }
+  .cal td { padding: 2px; text-align: center; }
+  .day {
+    position: relative;
+    width: 100%; max-width: 48px; aspect-ratio: 1; min-height: 40px;
+    margin: 0 auto; display: grid; place-items: center;
+    border-radius: 50%; border: 0; font: inherit; font-size: .95rem;
+    background: transparent; color: var(--muted); opacity: .55;
+  }
+  .day.avail { background: var(--accent-soft); color: var(--accent-soft-ink); font-weight: 650; opacity: 1; cursor: pointer; }
+  .day.avail:hover { background: var(--accent); color: var(--accent-ink); }
+  .day[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+  .day.today::after {
+    content: ""; position: absolute; bottom: 5px; left: 50%; width: 4px; height: 4px;
+    margin-left: -2px; border-radius: 50%; background: currentColor;
+  }
+
+  /* Times */
+  .times h3 { margin: 4px 0 4px; font-size: 1rem; }
+  .times .sub { margin: 0 0 12px; font-size: .85rem; color: var(--muted); }
+  .slots { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
+  @media (min-width: 640px) {
+    .slots { grid-template-columns: 1fr; max-height: 380px; overflow-y: auto; padding: 2px; }
+  }
+  .slot {
+    width: 100%; min-height: 44px; border-radius: 10px;
+    border: 1px solid var(--accent); background: var(--surface); color: var(--accent);
+    font: inherit; font-weight: 650; cursor: pointer;
+  }
+  .slot:hover { background: var(--accent); color: var(--accent-ink); }
+  .empty { color: var(--muted); font-size: .95rem; margin: 0; }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    min-height: 44px; padding: 10px 18px; border-radius: 10px;
+    font: inherit; font-weight: 650; text-decoration: none; cursor: pointer;
+    border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink);
+  }
+  .btn:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+  .btn.secondary { background: var(--surface); color: var(--accent); }
+  .btn.secondary:hover { background: var(--accent-soft); }
+  .btn svg { width: 18px; height: 18px; }
+  .link {
+    background: none; border: 0; padding: 8px 0; min-height: 44px;
+    font: inherit; color: var(--accent); cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .link:hover { text-decoration: underline; }
+  .link svg { width: 18px; height: 18px; }
+
+  /* Form */
+  .summary {
+    border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin: 0 0 20px;
+    background: var(--bg);
+  }
+  .summary p { margin: 0; }
+  .summary .when { font-weight: 650; }
+  .summary .meta { color: var(--muted); font-size: .9rem; margin-top: 2px; }
+  form { display: grid; gap: 16px; max-width: 520px; }
+  .field label { display: block; font-weight: 600; margin-bottom: 6px; }
+  .field .opt { font-weight: 400; color: var(--muted); }
+  textarea { min-height: 110px; resize: vertical; }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+  .field [aria-invalid="true"] { border-color: var(--danger); }
+  .err { color: var(--danger); font-size: .9rem; margin: 6px 0 0; }
+  .alert {
+    border-radius: 10px; padding: 12px 14px; margin: 0 0 16px;
+    background: var(--danger-soft); color: var(--danger); font-weight: 600;
+  }
+  .hint { font-size: .85rem; color: var(--muted); margin: 6px 0 0; }
+
+  /* Done */
+  .done-icon { width: 48px; height: 48px; border-radius: 50%; background: var(--accent-soft); color: var(--accent-soft-ink); display: grid; place-items: center; margin-bottom: 12px; }
+  .done-icon svg { width: 26px; height: 26px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 20px 0 8px; }
+  @media (max-width: 480px) { .actions .btn { flex: 1 1 100%; } }
+
+  :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+  [hidden] { display: none !important; }
+  @media (prefers-reduced-motion: no-preference) {
+    .day, .slot, .btn, .iconbtn { transition: background-color .12s, color .12s, border-color .12s; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <main class="card">
+    <section class="info" aria-labelledby="meeting-title">
+      <p class="company" id="company-name"></p>
+      <h1 id="meeting-title"></h1>
+      <ul class="facts">
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          <span id="meeting-duration"></span>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3"/></svg>
+          <span id="meeting-location"></span>
+        </li>
+      </ul>
+      <p class="desc" id="meeting-desc"></p>
+      <p class="hosthours" id="host-hours"></p>
+    </section>
+
+    <section class="flow">
+      <!-- Step 1: pick a time -->
+      <div id="step-pick">
+        <h2 id="pick-title" tabindex="-1">Pick a day and time</h2>
+        <div class="alert" id="pick-alert" role="alert" hidden></div>
+        <div class="tzrow">
+          <label for="tz">Time zone</label>
+          <select id="tz"></select>
+          <span class="tznow" id="tz-now"></span>
+        </div>
+        <div class="pick">
+          <div class="calendar">
+            <div class="calhead">
+              <button type="button" class="iconbtn" id="prev-month" aria-label="Previous month">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+              </button>
+              <h3 id="month-label" aria-live="polite"></h3>
+              <button type="button" class="iconbtn" id="next-month" aria-label="Next month">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+              </button>
+            </div>
+            <table class="cal" aria-labelledby="month-label">
+              <thead><tr id="weekday-row"></tr></thead>
+              <tbody id="cal-body"></tbody>
+            </table>
+          </div>
+          <div class="times" id="times">
+            <h3 id="times-title"></h3>
+            <p class="sub" id="times-sub"></p>
+            <ul class="slots" id="slot-list" aria-labelledby="times-title"></ul>
+            <p class="empty" id="times-empty" hidden></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: details -->
+      <div id="step-form" hidden>
+        <button type="button" class="link" id="back-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+          Back to times
+        </button>
+        <h2 id="form-title" tabindex="-1">Your details</h2>
+        <div class="summary">
+          <p class="when" id="form-when"></p>
+          <p class="meta" id="form-meta"></p>
+        </div>
+        <form id="book-form" novalidate>
+          <div class="field">
+            <label for="f-name">Name</label>
+            <input id="f-name" name="name" autocomplete="name" required maxlength="120" aria-describedby="e-name">
+            <p class="err" id="e-name" hidden></p>
+          </div>
+          <div class="field">
+            <label for="f-email">Email</label>
+            <input id="f-email" name="email" type="email" autocomplete="email" inputmode="email" required maxlength="200" aria-describedby="e-email h-email">
+            <p class="hint" id="h-email">The calendar invite details are shown on the next screen.</p>
+            <p class="err" id="e-email" hidden></p>
+          </div>
+          <div class="field">
+            <label for="f-note">Anything we should know? <span class="opt">(optional)</span></label>
+            <textarea id="f-note" name="note" maxlength="1000"></textarea>
+          </div>
+          <div>
+            <button type="submit" class="btn">Confirm booking</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Step 3: confirmation -->
+      <div id="step-done" hidden>
+        <div class="done-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+        </div>
+        <h2 id="done-title" tabindex="-1">You're booked</h2>
+        <div class="summary">
+          <p class="when" id="done-when"></p>
+          <p class="meta" id="done-meta"></p>
+          <p class="meta" id="done-who"></p>
+        </div>
+        <p>Add it to your calendar so it doesn't slip:</p>
+        <div class="actions">
+          <a class="btn" id="ics-link" download="intro-call.ics" href="#">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 4v11m0 0l-4-4m4 4l4-4M5 20h14"/></svg>
+            Download .ics
+          </a>
+          <a class="btn secondary" id="gcal-link" href="#" target="_blank" rel="noopener noreferrer">
+            Add to Google Calendar<span class="sr-only"> (opens in a new tab)</span>
+          </a>
+        </div>
+        <button type="button" class="link" id="again-btn">Book another time</button>
+      </div>
+    </section>
+  </main>
+  <noscript><p>This booking page needs JavaScript to show available times.</p></noscript>
+</div>
+<div class="sr-only" aria-live="polite" id="announce"></div>
+
+<script>
+"use strict";
+
+/* ---------- Settings: edit these ---------- */
+const CONFIG = {
+  company: "Your Company",
+  title: "Intro call",
+  durationMin: 30,
+  location: "Video call",
+  description: "A short call to get to know each other, understand what you need and see whether we can help.",
+  hostTz: "Europe/Rome",
+  workDays: [1, 2, 3, 4, 5],          // 0 = Sunday ... 6 = Saturday
+  dayStart: "09:00",                   // host time
+  dayEnd: "17:00",                     // host time; last slot ends here
+  minNoticeHours: 4,
+  maxDaysAhead: 60,
+  blockedDates: [],                    // host-calendar dates to close, e.g. ["2026-12-25"]
+  storageKey: "introcall.bookings.v1"
+};
+
+/* LOGIC START */
+const pad = n => String(n).padStart(2, "0");
+const MIN = 60000, HOUR = 3600000, DAY = 86400000;
+
+// ---- Time zone maths (Intl only, no libraries) ----
+const fmtCache = new Map();
+function partsFormatter(tz) {
+  let f = fmtCache.get(tz);
+  if (!f) {
+    f = new Intl.DateTimeFormat("en-US", {
+      timeZone: tz, hourCycle: "h23",
+      year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", second: "2-digit"
+    });
+    fmtCache.set(tz, f);
+  }
+  return f;
+}
+function zoned(ms, tz) {
+  const o = {};
+  for (const p of partsFormatter(tz).formatToParts(new Date(ms))) o[p.type] = p.value;
+  return { y: +o.year, m: +o.month, d: +o.day, h: (+o.hour) % 24, mi: +o.minute, s: +o.second };
+}
+function offsetMinutes(ms, tz) {
+  const z = zoned(ms, tz);
+  const asUtc = Date.UTC(z.y, z.m - 1, z.d, z.h, z.mi, z.s);
+  return Math.round((asUtc - Math.floor(ms / 1000) * 1000) / MIN);
+}
+// Wall-clock time in a zone -> UTC milliseconds
+function zonedToUtc(y, m, d, h, mi, tz) {
+  const guess = Date.UTC(y, m - 1, d, h, mi);
+  let ms = guess - offsetMinutes(guess, tz) * MIN;
+  ms = guess - offsetMinutes(ms, tz) * MIN;
+  return ms;
+}
+function dateKey(ms, tz) { const z = zoned(ms, tz); return `${z.y}-${pad(z.m)}-${pad(z.d)}`; }
+function keyParts(key) { const [y, m, d] = key.split("-").map(Number); return { y, m, d }; }
+function keyToUtcNoon(key) { const { y, m, d } = keyParts(key); return Date.UTC(y, m - 1, d, 12); }
+function utcToKey(ms) { const t = new Date(ms); return `${t.getUTCFullYear()}-${pad(t.getUTCMonth() + 1)}-${pad(t.getUTCDate())}`; }
+function toMinutes(hhmm) { const [h, m] = hhmm.split(":").map(Number); return h * 60 + m; }
+function gmtLabel(tz, ms) {
+  const off = offsetMinutes(ms, tz);
+  if (off === 0) return "GMT";
+  const a = Math.abs(off);
+  return `GMT${off > 0 ? "+" : "-"}${Math.floor(a / 60)}${a % 60 ? ":" + pad(a % 60) : ""}`;
+}
+
+// ---- Availability (rules always evaluated in the host's zone) ----
+function computeSlots(now, bookedStarts) {
+  const tz = CONFIG.hostTz;
+  const today = zoned(now, tz);
+  const earliest = now + CONFIG.minNoticeHours * HOUR;
+  const latest = now + CONFIG.maxDaysAhead * DAY;
+  const start = toMinutes(CONFIG.dayStart), end = toMinutes(CONFIG.dayEnd), dur = CONFIG.durationMin;
+  const booked = new Set(bookedStarts);
+  const blocked = new Set(CONFIG.blockedDates);
+  const slots = [];
+  for (let i = 0; i <= CONFIG.maxDaysAhead + 1; i++) {
+    const day = new Date(Date.UTC(today.y, today.m - 1, today.d + i));
+    if (!CONFIG.workDays.includes(day.getUTCDay())) continue;
+    const Y = day.getUTCFullYear(), M = day.getUTCMonth() + 1, D = day.getUTCDate();
+    if (blocked.has(`${Y}-${pad(M)}-${pad(D)}`)) continue;
+    for (let t = start; t + dur <= end; t += dur) {
+      const s = zonedToUtc(Y, M, D, Math.floor(t / 60), t % 60, tz);
+      if (s < earliest || s > latest || booked.has(s)) continue;
+      slots.push(s);
+    }
+  }
+  return slots;
+}
+function isSlotValid(ms, now, bookedStarts) {
+  return computeSlots(now, bookedStarts).includes(ms);
+}
+
+// ---- Calendar exports ----
+function icsStamp(ms) { return new Date(ms).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, ""); }
+function icsEscape(s) {
+  return String(s).replace(/\r\n?/g, "\n").replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\n/g, "\\n");
+}
+function icsFold(line) {
+  const enc = new TextEncoder();
+  const out = []; let cur = "", len = 0;
+  for (const ch of line) {
+    const b = enc.encode(ch).length;
+    if (len + b > (out.length ? 74 : 75)) { out.push(cur); cur = ""; len = 0; }
+    cur += ch; len += b;
+  }
+  out.push(cur);
+  return out.join("\r\n ");
+}
+function eventDetails(b) {
+  let d = `${CONFIG.title} with ${CONFIG.company} (${CONFIG.durationMin} min).\n${CONFIG.location}.`;
+  if (b.note) d += `\n\nNote from ${b.name}:\n${b.note}`;
+  return d;
+}
+function buildIcs(b) {
+  const end = b.start + CONFIG.durationMin * MIN;
+  const lines = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//" + icsEscape(CONFIG.company) + "//Intro call booking//EN",
+    "CALSCALE:GREGORIAN",
+    "METHOD:PUBLISH",
+    "BEGIN:VEVENT",
+    "UID:" + b.id + "@booking.local",
+    "DTSTAMP:" + icsStamp(b.createdAt),
+    "DTSTART:" + icsStamp(b.start),
+    "DTEND:" + icsStamp(end),
+    "SUMMARY:" + icsEscape(`${CONFIG.title} with ${CONFIG.company}`),
+    "DESCRIPTION:" + icsEscape(eventDetails(b)),
+    "LOCATION:" + icsEscape(CONFIG.location),
+    "ATTENDEE;CN=" + JSON.stringify(b.name.replace(/"/g, "'")) + ";ROLE=REQ-PARTICIPANT:mailto:" + b.email,
+    "STATUS:CONFIRMED",
+    "TRANSP:OPAQUE",
+    "END:VEVENT",
+    "END:VCALENDAR"
+  ];
+  return lines.map(icsFold).join("\r\n") + "\r\n";
+}
+function googleCalendarUrl(b) {
+  const end = b.start + CONFIG.durationMin * MIN;
+  const q = (k, v) => `${k}=${encodeURIComponent(v)}`;
+  return "https://calendar.google.com/calendar/render?action=TEMPLATE"
+    + "&" + q("text", `${CONFIG.title} with ${CONFIG.company}`)
+    + "&dates=" + icsStamp(b.start) + "/" + icsStamp(end)
+    + "&" + q("details", eventDetails(b))
+    + "&" + q("location", CONFIG.location);
+}
+/* LOGIC END */
+
+// ---- Storage ----
+let memoryStore = [];
+function loadBookings() {
+  try {
+    const list = JSON.parse(localStorage.getItem(CONFIG.storageKey) || "[]");
+    return Array.isArray(list) ? list.filter(b => b && typeof b.start === "number") : [];
+  } catch (e) { return memoryStore.slice(); }
+}
+function saveBookings(list) {
+  memoryStore = list.slice();
+  try { localStorage.setItem(CONFIG.storageKey, JSON.stringify(list)); } catch (e) { /* storage unavailable: keep in memory */ }
+}
+const bookedStarts = () => loadBookings().map(b => b.start);
+const newId = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
+
+// ---- Formatting in the visitor's zone ----
+const locale = navigator.language || "en";
+function fmt(ms, tz, opts) { return new Intl.DateTimeFormat(locale, { timeZone: tz, ...opts }).format(new Date(ms)); }
+const fmtTime = (ms, tz) => fmt(ms, tz, { hour: "numeric", minute: "2-digit" });
+const fmtLongDate = (ms, tz) => fmt(ms, tz, { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+const fmtKeyDate = (key, opts) => fmt(keyToUtcNoon(key), "UTC", opts);
+function tzName(tz) { return tz.split("/").pop().replace(/_/g, " "); }
+function weekStart() {
+  try {
+    const l = new Intl.Locale(locale);
+    const info = (l.getWeekInfo && l.getWeekInfo()) || l.weekInfo;
+    if (info && info.firstDay) return info.firstDay % 7;
+  } catch (e) {}
+  return /-(US|CA|JP|BR|MX|IL|PH|KR|TW|IN)$/i.test(locale) ? 0 : 1;
+}
+const WEEK_START = weekStart();
+
+// ---- State ----
+const $ = id => document.getElementById(id);
+function detectTz() {
+  try { return Intl.DateTimeFormat().resolvedOptions().timeZone || CONFIG.hostTz; } catch (e) { return CONFIG.hostTz; }
+}
+const state = { tz: detectTz(), slots: [], byDay: new Map(), viewY: 0, viewM: 0, day: null, slot: null, booking: null };
+
+function refreshSlots() {
+  state.slots = computeSlots(Date.now(), bookedStarts());
+  state.byDay = new Map();
+  for (const s of state.slots) {
+    const k = dateKey(s, state.tz);
+    if (!state.byDay.has(k)) state.byDay.set(k, []);
+    state.byDay.get(k).push(s);
+  }
+}
+function monthBounds() {
+  const today = zoned(Date.now(), state.tz);
+  const min = today.y * 12 + today.m - 1;
+  const lastMs = state.slots.length ? state.slots[state.slots.length - 1] : Date.now() + CONFIG.maxDaysAhead * DAY;
+  const last = zoned(lastMs, state.tz);
+  return { min, max: Math.max(min, last.y * 12 + last.m - 1) };
+}
+
+// ---- Rendering ----
+function announce(msg) { const a = $("announce"); a.textContent = ""; setTimeout(() => { a.textContent = msg; }, 30); }
+
+function renderStatic() {
+  $("company-name").textContent = CONFIG.company;
+  $("meeting-title").textContent = CONFIG.title;
+  $("meeting-duration").textContent = `${CONFIG.durationMin} minutes`;
+  $("meeting-location").textContent = CONFIG.location;
+  $("meeting-desc").textContent = CONFIG.description;
+  document.title = `${CONFIG.title} · ${CONFIG.company}`;
+  const days = CONFIG.workDays.slice().sort((a, b) => ((a - WEEK_START + 7) % 7) - ((b - WEEK_START + 7) % 7));
+  const dayNames = days.map(d => fmt(Date.UTC(2024, 0, 7 + d, 12), "UTC", { weekday: "short" }));
+  const range = dayNames.length === 5 && CONFIG.workDays.join() === "1,2,3,4,5" ? `${dayNames[0]}–${dayNames[4]}` : dayNames.join(", ");
+  $("host-hours").textContent = `Available ${range}, ${CONFIG.dayStart}–${CONFIG.dayEnd} ${tzName(CONFIG.hostTz)} time. Book at least ${CONFIG.minNoticeHours} hours ahead, up to ${CONFIG.maxDaysAhead} days out.`;
+
+  const row = $("weekday-row");
+  row.innerHTML = "";
+  for (let i = 0; i < 7; i++) {
+    const d = (WEEK_START + i) % 7;
+    const ms = Date.UTC(2024, 0, 7 + d, 12); // 7 Jan 2024 was a Sunday
+    const th = document.createElement("th");
+    th.scope = "col";
+    const abbr = document.createElement("abbr");
+    abbr.title = fmt(ms, "UTC", { weekday: "long" });
+    abbr.textContent = fmt(ms, "UTC", { weekday: "short" });
+    th.appendChild(abbr);
+    row.appendChild(th);
+  }
+}
+
+function renderTzSelect() {
+  const sel = $("tz");
+  let zones = [];
+  try { zones = Intl.supportedValuesOf("timeZone"); } catch (e) {}
+  if (!zones.length) zones = ["UTC", "Europe/London", "Europe/Rome", "Europe/Berlin", "Europe/Athens", "America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles", "America/Sao_Paulo", "Asia/Dubai", "Asia/Kolkata", "Asia/Singapore", "Asia/Tokyo", "Australia/Sydney"];
+  if (!zones.includes(state.tz)) zones = zones.concat(state.tz);
+  if (!zones.includes(CONFIG.hostTz)) zones = zones.concat(CONFIG.hostTz);
+  const now = Date.now();
+  const groups = new Map();
+  for (const z of zones) {
+    const g = z.includes("/") ? z.split("/")[0] : "Other";
+    if (!groups.has(g)) groups.set(g, []);
+    groups.get(g).push(z);
+  }
+  const frag = document.createDocumentFragment();
+  for (const g of [...groups.keys()].sort()) {
+    const og = document.createElement("optgroup");
+    og.label = g;
+    for (const z of groups.get(g).sort((a, b) => tzName(a).localeCompare(tzName(b)))) {
+      let label;
+      try { label = `${z.replace(/_/g, " ")} (${gmtLabel(z, now)})`; } catch (e) { continue; }
+      const o = new Option(label, z);
+      og.appendChild(o);
+    }
+    frag.appendChild(og);
+  }
+  sel.innerHTML = "";
+  sel.appendChild(frag);
+  sel.value = state.tz;
+}
+
+function renderTzNow() {
+  $("tz-now").textContent = `Now ${fmtTime(Date.now(), state.tz)} there`;
+}
+
+function renderCalendar() {
+  const { min, max } = monthBounds();
+  const cur = state.viewY * 12 + state.viewM;
+  $("prev-month").disabled = cur <= min;
+  $("next-month").disabled = cur >= max;
+  $("month-label").textContent = fmt(Date.UTC(state.viewY, state.viewM, 15), "UTC", { month: "long", year: "numeric" });
+
+  const todayKey = dateKey(Date.now(), state.tz);
+  const first = new Date(Date.UTC(state.viewY, state.viewM, 1));
+  const lead = (first.getUTCDay() - WEEK_START + 7) % 7;
+  const daysInMonth = new Date(Date.UTC(state.viewY, state.viewM + 1, 0)).getUTCDate();
+  const body = $("cal-body");
+  body.innerHTML = "";
+  let tr = document.createElement("tr");
+  for (let i = 0; i < lead; i++) tr.appendChild(document.createElement("td"));
+  for (let d = 1; d <= daysInMonth; d++) {
+    const key = `${state.viewY}-${pad(state.viewM + 1)}-${pad(d)}`;
+    const count = (state.byDay.get(key) || []).length;
+    const td = document.createElement("td");
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "day";
+    b.textContent = d;
+    b.dataset.key = key;
+    const label = fmtKeyDate(key, { weekday: "long", day: "numeric", month: "long" });
+    if (count) {
+      b.classList.add("avail");
+      b.setAttribute("aria-pressed", String(state.day === key));
+      b.setAttribute("aria-label", `${label}, ${count} ${count === 1 ? "time" : "times"} available`);
+    } else {
+      b.disabled = true;
+      b.setAttribute("aria-label", `${label}, no times available`);
+    }
+    if (key === todayKey) { b.classList.add("today"); b.setAttribute("aria-current", "date"); }
+    td.appendChild(b);
+    tr.appendChild(td);
+    if (tr.children.length === 7) { body.appendChild(tr); tr = document.createElement("tr"); }
+  }
+  if (tr.children.length) {
+    while (tr.children.length < 7) tr.appendChild(document.createElement("td"));
+    body.appendChild(tr);
+  }
+}
+
+function renderTimes() {
+  const list = $("slot-list"), empty = $("times-empty");
+  list.innerHTML = "";
+  if (!state.day) {
+    $("times-title").textContent = "Times";
+    $("times-sub").textContent = "";
+    empty.textContent = state.slots.length ? "Choose a day to see open times." : "No open times in the next " + CONFIG.maxDaysAhead + " days.";
+    empty.hidden = false;
+    return;
+  }
+  const slots = state.byDay.get(state.day) || [];
+  $("times-title").textContent = fmtKeyDate(state.day, { weekday: "long", day: "numeric", month: "long" });
+  $("times-sub").textContent = `${tzName(state.tz)} time · ${CONFIG.durationMin} min`;
+  empty.hidden = slots.length > 0;
+  empty.textContent = "No open times left on this day. Please pick another.";
+  for (const s of slots) {
+    const li = document.createElement("li");
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "slot";
+    b.dataset.ms = s;
+    b.textContent = fmtTime(s, state.tz);
+    b.setAttribute("aria-label", `${fmtTime(s, state.tz)} to ${fmtTime(s + CONFIG.durationMin * MIN, state.tz)}`);
+    li.appendChild(b);
+    list.appendChild(li);
+  }
+}
+
+function whenText(ms) {
+  return `${fmtLongDate(ms, state.tz)}, ${fmtTime(ms, state.tz)} – ${fmtTime(ms + CONFIG.durationMin * MIN, state.tz)}`;
+}
+function metaText(ms) {
+  let t = `${tzName(state.tz)} time (${gmtLabel(state.tz, ms)})`;
+  if (offsetMinutes(ms, state.tz) !== offsetMinutes(ms, CONFIG.hostTz)) {
+    t += ` · ${fmtTime(ms, CONFIG.hostTz)} in ${tzName(CONFIG.hostTz)}`;
+  }
+  return t;
+}
+
+function showStep(name) {
+  for (const s of ["pick", "form", "done"]) $("step-" + s).hidden = s !== name;
+  const h = { pick: "pick-title", form: "form-title", done: "done-title" }[name];
+  $(h).focus();
+  window.scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+}
+
+function setView(key) {
+  const { y, m } = keyParts(key);
+  state.viewY = y; state.viewM = m - 1;
+}
+
+function fullRender() {
+  refreshSlots();
+  if (state.day && !state.byDay.has(state.day)) {
+    // keep the chosen day visible but empty; times list explains it
+  }
+  if (!state.viewY) {
+    const firstKey = state.slots.length ? dateKey(state.slots[0], state.tz) : dateKey(Date.now(), state.tz);
+    setView(firstKey);
+    if (state.slots.length) state.day = firstKey;
+  }
+  const { min, max } = monthBounds();
+  const cur = state.viewY * 12 + state.viewM;
+  if (cur < min || cur > max) { const c = Math.min(Math.max(cur, min), max); state.viewY = Math.floor(c / 12); state.viewM = c % 12; }
+  renderTzNow();
+  renderCalendar();
+  renderTimes();
+}
+
+// ---- Events ----
+function selectDay(key, fromKeyboard) {
+  state.day = key;
+  renderCalendar();
+  renderTimes();
+  const n = (state.byDay.get(key) || []).length;
+  announce(`${fmtKeyDate(key, { weekday: "long", day: "numeric", month: "long" })}: ${n} ${n === 1 ? "time" : "times"} available.`);
+  const btn = $("cal-body").querySelector(`[data-key="${key}"]`);
+  if (btn) btn.focus();
+  if (!fromKeyboard && matchMedia("(max-width: 639px)").matches) {
+    $("times").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+  }
+}
+
+$("cal-body").addEventListener("click", e => {
+  const b = e.target.closest("button.day.avail");
+  if (b) selectDay(b.dataset.key, e.detail === 0);
+});
+$("cal-body").addEventListener("keydown", e => {
+  const b = e.target.closest("button.day");
+  const delta = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 }[e.key];
+  if (!b || !delta) return;
+  let ms = keyToUtcNoon(b.dataset.key), target = null;
+  for (let i = 0; i < 80 && !target; i++) {
+    ms += delta * DAY;
+    const k = utcToKey(ms);
+    if (state.byDay.has(k)) target = k;
+  }
+  if (!target) return;
+  e.preventDefault();
+  const { y, m } = keyParts(target);
+  if (y !== state.viewY || m - 1 !== state.viewM) { setView(target); renderCalendar(); }
+  $("cal-body").querySelector(`[data-key="${target}"]`).focus();
+});
+$("prev-month").addEventListener("click", () => {
+  const c = state.viewY * 12 + state.viewM - 1; state.viewY = Math.floor(c / 12); state.viewM = c % 12; renderCalendar();
+});
+$("next-month").addEventListener("click", () => {
+  const c = state.viewY * 12 + state.viewM + 1; state.viewY = Math.floor(c / 12); state.viewM = c % 12; renderCalendar();
+});
+$("tz").addEventListener("change", e => {
+  const prevSlot = state.day && (state.byDay.get(state.day) || [])[0];
+  state.tz = e.target.value;
+  refreshSlots();
+  // keep the visitor on the same moment, re-expressed as a date in the new zone
+  const key = prevSlot ? dateKey(prevSlot, state.tz) : (state.slots[0] ? dateKey(state.slots[0], state.tz) : null);
+  state.day = key && state.byDay.has(key) ? key : (state.slots[0] ? dateKey(state.slots[0], state.tz) : null);
+  if (state.day) setView(state.day);
+  fullRender();
+  announce(`Times now shown in ${tzName(state.tz)} time.`);
+});
+$("slot-list").addEventListener("click", e => {
+  const b = e.target.closest("button.slot");
+  if (!b) return;
+  state.slot = Number(b.dataset.ms);
+  $("pick-alert").hidden = true;
+  $("form-when").textContent = whenText(state.slot);
+  $("form-meta").textContent = metaText(state.slot);
+  showStep("form");
+});
+$("back-btn").addEventListener("click", () => { fullRender(); showStep("pick"); });
+
+function setError(input, errEl, msg) {
+  input.setAttribute("aria-invalid", msg ? "true" : "false");
+  errEl.textContent = msg || "";
+  errEl.hidden = !msg;
+}
+$("book-form").addEventListener("submit", e => {
+  e.preventDefault();
+  const name = $("f-name").value.trim();
+  const email = $("f-email").value.trim();
+  const note = $("f-note").value.trim();
+  const nameErr = name ? "" : "Please enter your name.";
+  const emailErr = !email ? "Please enter your email." : (/^[^\s@;,"<>]+@[^\s@;,"<>]+\.[^\s@;,"<>]+$/.test(email) ? "" : "Please enter a valid email, like name@example.com.");
+  setError($("f-name"), $("e-name"), nameErr);
+  setError($("f-email"), $("e-email"), emailErr);
+  if (nameErr) { $("f-name").focus(); return; }
+  if (emailErr) { $("f-email").focus(); return; }
+
+  // Re-check against the latest stored bookings (another tab may have booked it).
+  const existing = loadBookings();
+  if (!isSlotValid(state.slot, Date.now(), existing.map(b => b.start))) {
+    const alert = $("pick-alert");
+    alert.textContent = "Sorry, that time is no longer available. Please choose another.";
+    alert.hidden = false;
+    fullRender();
+    showStep("pick");
+    return;
+  }
+  const booking = { id: newId(), start: state.slot, end: state.slot + CONFIG.durationMin * MIN, name, email, note, tz: state.tz, createdAt: Date.now() };
+  existing.push(booking);
+  saveBookings(existing);
+  state.booking = booking;
+  renderDone(booking);
+  $("book-form").reset();
+  showStep("done");
+});
+
+let icsUrl = null;
+function renderDone(b) {
+  $("done-when").textContent = whenText(b.start);
+  $("done-meta").textContent = metaText(b.start);
+  $("done-who").textContent = `${b.name} · ${b.email}`;
+  if (icsUrl) URL.revokeObjectURL(icsUrl);
+  icsUrl = URL.createObjectURL(new Blob([buildIcs(b)], { type: "text/calendar;charset=utf-8" }));
+  $("ics-link").href = icsUrl;
+  $("gcal-link").href = googleCalendarUrl(b);
+}
+$("again-btn").addEventListener("click", () => {
+  state.slot = null;
+  fullRender();
+  if (state.day && !state.byDay.has(state.day)) state.day = null;
+  renderCalendar(); renderTimes();
+  showStep("pick");
+});
+
+// Another tab booked something: refresh availability.
+window.addEventListener("storage", e => { if (e.key === CONFIG.storageKey) fullRender(); });
+// Notice window moves with the clock.
+setInterval(() => { if (!$("step-pick").hidden) fullRender(); else renderTzNow(); }, 60000);
+
+// ---- Init ----
+renderStatic();
+renderTzSelect();
+fullRender();
+</script>
+</body>
+</html>
